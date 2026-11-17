@@ -62,6 +62,7 @@ WORKDIR /app
 # into read-only site-packages.
 COPY pyproject.toml setup.py README.md LICENSE NOTICE ./
 COPY dodaios ./dodaios
+COPY procaps ./procaps
 COPY --from=web /build/dodaios/ui/web/dist ./dodaios/ui/web/dist
 RUN python -m pip install --upgrade pip \
  && python -m pip install -e .
@@ -93,10 +94,10 @@ ENV JARVIS_BIND_HOST=0.0.0.0 \
     JARVIS_NONINTERACTIVE=1 \
     JARVIS_CONFIG=/app/data/jarvis.toml \
     JARVIS_DATA_DIR=/app/data \
-    HOME=/app/data/home
+    HOME=/app/data/home \n    DODAIOS_THEME_CSS=/app/procaps/procaps-theme.css
 
 # Generous start-period: first boot builds the brain in the background.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=6 \
   CMD curl -fsS http://127.0.0.1:8000/api/health || exit 1
 
-CMD ["python", "-m", "dodaios.ui.web.launcher", "--headless", "--port", "8000"]
+CMD ["sh", "-c", "[ -f /app/data/jarvis.toml ] || cp /app/procaps/procaps.toml /app/data/jarvis.toml; exec python -m dodaios.ui.web.launcher --headless --port 8000"]

@@ -1,0 +1,16 @@
+/* Paleta ProCaps: lime #C0E945, preto, grafite #353535, verde-escuro #143021 */
+:root, html, html.dark, .dark, [data-theme], body {
+  --accent: 75 79% 59% !important;
+  --accent-rgb: 192 233 69 !important;
+  --accent-foreground: 0 0% 0% !important;
+  --primary: 75 79% 59% !important;
+  --primary-foreground: 0 0% 0% !important;
+  --ring: 75 79% 59% !important;
+  --background: 80 12% 3% !important;
+  --card: 80 10% 7% !important;
+  --muted: 80 8% 11% !important;
+  --surface-raised: 80 8% 14% !important;
+  --border: 80 8% 16% !important;
+  --border-strong: 75 20% 28% !important;
+}
+::selection { background: #C0E945; color: #000; }

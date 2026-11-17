@@ -1,0 +1,18 @@
+[ui]
+language = "pt"
+theme = "dark"
+
+[brain]
+primary = "gemini"
+reply_language = "pt"
+
+[brain.providers.gemini-live]
+voice = "Charon"
+
+[tts]
+voice_en = "Charon"
+voice_de = "Charon"
+language_code = "pt-BR"
+
+[voice]
+mode = "realtime"

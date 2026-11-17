@@ -2410,9 +2410,18 @@ class WebServer:
             return
 
         if ASSETS_DIR.is_dir():
+            class _RevalidatingStaticFiles(StaticFiles):
+                # Local patch: the embedded browser kept stale copies of the UI
+                # (no cache headers -> heuristic caching for hours). no-cache
+                # makes it revalidate each time; unchanged files answer 304.
+                def file_response(self, *args, **kwargs):  # type: ignore[override]
+                    resp = super().file_response(*args, **kwargs)
+                    resp.headers["Cache-Control"] = "no-cache"
+                    return resp
+
             app.mount(
                 "/assets",
-                StaticFiles(directory=str(ASSETS_DIR)),
+                _RevalidatingStaticFiles(directory=str(ASSETS_DIR)),
                 name="assets",
             )
 
@@ -2433,7 +2442,7 @@ class WebServer:
                 target = (DIST_DIR / full_path).resolve()
                 dist_root = DIST_DIR.resolve()
                 if target.is_file() and dist_root in target.parents:
-                    return FileResponse(str(target))
+                    return FileResponse(str(target), headers={"Cache-Control": "no-cache"})
             except (OSError, ValueError):
                 pass
             # A missing asset (image/script/font) gets an honest 404, never the
@@ -2464,6 +2473,21 @@ class WebServer:
         # holding page below says what is happening and comes back on its own.
         # See dodaios/ui/web/spa_build.py.
         if INDEX_FILE.is_file() and build_is_complete(INDEX_FILE, DIST_DIR):
+            # Local patch: per-instance colour override. When DODAIOS_THEME_CSS
+            # points at a CSS file, it is injected into <head> (ProCaps instance).
+            _css_path = os.environ.get("DODAIOS_THEME_CSS", "").strip()
+            if _css_path:
+                try:
+                    _css = Path(_css_path).read_text(encoding="utf-8")
+                    _html = INDEX_FILE.read_text(encoding="utf-8").replace(
+                        "</head>", f'<style id="instance-theme">{_css}</style></head>', 1
+                    )
+                    return HTMLResponse(
+                        content=_html,
+                        headers={"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"},
+                    )
+                except OSError:
+                    pass
             return FileResponse(
                 str(INDEX_FILE),
                 headers={
